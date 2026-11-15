@@ -1,0 +1,81 @@
+{
+  "_readme": "Vapi function tools for Ava. Replace N8N_BASE with your n8n URL. Each tool posts a 'tool-calls' message to its server URL; the n8n workflow must reply with {\"results\":[{\"toolCallId\":\"...\",\"result\":\"...\"}]} via a Respond to Webhook node. Docs: https://docs.vapi.ai/server-url/events , https://docs.vapi.ai/tools/custom-tools",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "lookup_customer",
+        "description": "Look up an existing customer or lead by phone number to greet them by name and see open appointments or jobs.",
+        "parameters": {
+          "type": "object",
+          "properties": { "phone": { "type": "string", "description": "Caller phone in E.164, e.g. +12145550123" } },
+          "required": ["phone"]
+        }
+      },
+      "server": { "url": "N8N_BASE/webhook/abc/vapi-tools" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "save_qualification",
+        "description": "Save the caller's qualification answers. Call once all answers are collected, or immediately if the caller opts out.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "isOwner": { "type": "boolean" },
+            "address": { "type": "string" },
+            "zip": { "type": "string" },
+            "symptoms": { "type": "array", "items": { "type": "string" } },
+            "foundationType": { "type": "string", "enum": ["slab", "pier_and_beam", "unknown"] },
+            "timeline": { "type": "string" },
+            "optOut": { "type": "boolean" }
+          },
+          "required": ["name"]
+        }
+      },
+      "server": { "url": "N8N_BASE/webhook/abc/vapi-tools" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "check_availability",
+        "description": "Get up to two open 1-hour inspection slots on or after the preferred date (business hours Mon–Sat, America/Chicago).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "preferredDate": { "type": "string", "description": "ISO date YYYY-MM-DD" },
+            "partOfDay": { "type": "string", "enum": ["morning", "afternoon", "any"] }
+          },
+          "required": ["preferredDate"]
+        }
+      },
+      "server": { "url": "N8N_BASE/webhook/abc/vapi-tools" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "book_inspection",
+        "description": "Book the free inspection after the caller confirmed date, time and address.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "address": { "type": "string" },
+            "slotStart": { "type": "string", "description": "ISO 8601 with offset, e.g. 2026-11-18T10:00:00-06:00" }
+          },
+          "required": ["name", "phone", "address", "slotStart"]
+        }
+      },
+      "server": { "url": "N8N_BASE/webhook/abc/vapi-tools" }
+    },
+    {
+      "type": "transferCall",
+      "destinations": [
+        { "type": "number", "number": "+12145550100", "description": "On-call manager for structural or water emergencies" },
+        { "type": "number", "number": "+12145550101", "description": "Office, when the caller asks for a human during business hours" }
+      ]
+    }
+  ]
+}

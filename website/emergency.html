@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foundation Emergency | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<div class="page-head" style="background:#7a1f1f"><div class="container">
+  <h1>🚨 Foundation emergency?</h1>
+  <p>We answer 24/7. For the fastest help, call. Our assistant connects urgent calls to the on-call manager.</p>
+  <a class="btn btn-primary" id="call">📞 Call now</a>
+</div></div>
+
+<!-- Automation A6 → n8n webhook "abc/emergency" -->
+<section><div class="container grid-2">
+  <div>
+    <div class="alert alert-red">
+      <strong>If you smell gas, see sparking wires, or a wall or ceiling is actively moving: leave the house and call 911 first.</strong>
+      Then call your gas or electric utility. We'll help once everyone is safe.
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>What counts as urgent</h3>
+      <ul>
+        <li>Water coming up through the slab or flooding near the foundation</li>
+        <li>A new crack that is widening quickly</li>
+        <li>Doors or windows that suddenly won't open (possible egress risk)</li>
+        <li>A wall visibly separating from the house</li>
+      </ul>
+      <p class="muted">Everything else, like slow cracks or sticking doors, is best handled by a normal <a href="book.html">free inspection</a>.</p>
+    </div>
+  </div>
+  <form class="card form-card" id="emg-form">
+    <h2>Request urgent callback</h2>
+    <div class="row2">
+      <div><label>Full name</label><input name="name" required></div>
+      <div><label>Mobile phone</label><input name="phone" type="tel" required></div>
+    </div>
+    <label>Property address</label><input name="address" required>
+    <label>What is happening?</label><textarea name="issue" required></textarea>
+    <label class="consent"><input type="checkbox" name="danger"><span>Someone may be in danger right now (if so, call 911 first)</span></label>
+    <label class="consent"><input type="checkbox" name="consent_ai_call" required><span>I agree to be called back at this number, including by an AI assistant or automated technology.</span></label>
+    <button class="btn btn-danger" type="submit" style="width:100%;margin-top:14px">Send urgent request</button>
+    <div class="form-msg" role="status"></div>
+    <p class="note">n8n pages the on-call manager by SMS and call, then escalates to the backup if there's no answer in 5 minutes.</p>
+  </form>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  const B = ABC_CONFIG.BUSINESS; const c = document.getElementById("call"); c.href = "tel:" + B.phoneE164; c.textContent = "📞 " + B.phoneDisplay;
+  ABC.bindForm("emg-form", "emergency", {
+    success: "✅ Urgent request sent. The on-call manager is being paged now.",
+    transform: d => ({ ...d, priority: d.danger ? "P0" : "P1", source: "website-emergency" })
+  });
+</script>
+</body>
+</html>

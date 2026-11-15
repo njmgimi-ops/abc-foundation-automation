@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Annual Drainage & Sump Pump Check | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<!-- Automation E4 → n8n webhook "abc/maintenance-signup". n8n's daily schedule sends reminders 14 days before the anniversary. -->
+<div class="page-head"><div class="container"><h1>Annual drainage &amp; sump pump check</h1><p>Clay soil stays stable when moisture stays consistent. A yearly check protects your repair and your warranty.</p></div></div>
+<section><div class="container grid-2">
+  <div class="card">
+    <h3>What we check</h3>
+    <ul><li>Sump pump test run and float switch</li><li>Gutters, downspouts and extensions</li><li>Grading and pooling around the slab</li><li>French drain outlets and cleanouts</li><li>Pier and elevation readings vs. last year</li></ul>
+  </div>
+  <form class="card form-card" id="m-form">
+    <h2>Get a yearly reminder</h2>
+    <div class="row2"><div><label>Full name</label><input name="name" required></div><div><label>Mobile phone</label><input name="phone" type="tel" required></div></div>
+    <label>Email</label><input name="email" type="email">
+    <label>Property address</label><input name="address" required>
+    <div class="row2">
+      <div><label>Do you have a sump pump?</label><select name="hasSumpPump"><option value="true">Yes</option><option value="false">No</option><option value="unknown">Not sure</option></select></div>
+      <div><label>Preferred month</label><select name="preferredMonth">
+        <option>January</option><option>February</option><option selected>March</option><option>April</option><option>May</option><option>June</option>
+        <option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+    </div>
+    <label class="consent"><input type="checkbox" name="consent_sms" required><span>Text me my yearly reminder. Msg &amp; data rates may apply. Reply STOP to opt out.</span></label>
+    <label class="consent"><input type="checkbox" name="consent_ai_call"><span>If I don't book, an AI assistant may call me once to schedule.</span></label>
+    <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px">Sign me up</button>
+    <div class="form-msg" role="status"></div>
+  </form>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  ABC.bindForm("m-form", "maintenance", { success: "✅ You're on the list. We'll text you 2 weeks before your check.",
+    transform: d => ({ ...d, hasSumpPump: d.hasSumpPump === "unknown" ? null : d.hasSumpPump === "true", maintenance_opt_in: true }) });
+</script>
+</body>
+</html>

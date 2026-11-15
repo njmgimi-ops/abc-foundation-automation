@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automation Lab | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<div class="page-head"><div class="container">
+  <p class="eyebrow">Practice console</p>
+  <h1>Automation Lab</h1>
+  <p>Fire a realistic test event at each n8n workflow without filling in forms or making real calls. Edit the JSON, press <b>Fire</b>, then watch the execution in n8n.</p>
+</div></div>
+<section style="padding-top:28px"><div class="container">
+  <div class="card" id="conn"></div>
+  <div class="card" style="margin-top:16px">
+    <h3>Customer-facing pages with demo data</h3>
+    <p class="muted">These are the links your n8n workflows will text to customers.</p>
+    <div class="btn-row">
+      <a class="btn btn-outline" href="book.html?appt=APT-2041">Reschedule link (B3)</a>
+      <a class="btn btn-outline" href="upload.html?appt=APT-2041">Photo upload (C1)</a>
+      <a class="btn btn-outline" href="track.html?name=Mike&eta=25&status=on_the_way&appt=APT-2041">On-the-way (D2)</a>
+      <a class="btn btn-outline" href="proposal.html?id=P-3301&name=Daniel%20Kim&addr=412%20Elm%20St%2C%20Garland%2C%20TX&items=Steel%20push%20piers|12|595;Drainage%20correction|1|1310&deposit=25">Proposal (C3)</a>
+      <a class="btn btn-outline" href="review.html?job=J-5502&name=Daniel">Review request (E2)</a>
+    </div>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div class="grid-2" id="lab"></div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/automations.js"></script><script src="assets/app.js"></script>
+<script>
+  const C = ABC_CONFIG, A = ABC_AUTOMATIONS, e = ABC.escapeHtml;
+  document.getElementById("conn").innerHTML = C.N8N_BASE_URL
+    ? `<h3>✅ Connected to n8n</h3><p><code>${e(C.N8N_BASE_URL)}</code> · mode <b>${C.USE_TEST_URL ? "TEST (/webhook-test/)" : "PRODUCTION (/webhook/)"}</b></p>
+       <p class="note">TEST mode: click "Listen for test event" (or Execute workflow) in n8n first, then press Fire. PRODUCTION mode: the workflow must be published.</p>`
+    : `<h3>🟣 Demo mode</h3><p>No n8n URL set yet, so events are only shown in the ⚡ Inspector. Open <code>website/assets/config.js</code> and set <code>N8N_BASE_URL</code>.</p>`;
+  const cats = ["All", ...new Set(A.map(a => a.cat))]; let cur = "All";
+  function draw() {
+    document.getElementById("filters").innerHTML = cats.map(c => `<button class="${c === cur ? "on" : ""}" data-c="${e(c)}">${e(c)}</button>`).join("");
+    document.querySelectorAll("#filters button").forEach(b => b.onclick = () => { cur = b.dataset.c; draw(); });
+    document.getElementById("lab").innerHTML = A.filter(a => cur === "All" || a.cat === cur).map(a => `
+      <article class="card auto-card">
+        <div><span class="id">${a.id}</span> · <span class="phase phase-${a.phase}">Phase ${a.phase}</span></div>
+        <h3>${e(a.title)}</h3>
+        <div class="k">Endpoint</div><code style="font-size:.78rem;word-break:break-all">${e(ABC.webhookUrl(a.webhook))}</code>
+        <div class="k">Payload (editable)</div>
+        <textarea id="p-${a.id}" style="font-family:ui-monospace,monospace;font-size:.78rem;min-height:150px">${e(JSON.stringify(a.sample, null, 2))}</textarea>
+        <div class="btn-row"><button class="btn btn-primary" data-fire="${a.id}">⚡ Fire</button><span class="form-msg" id="s-${a.id}"></span></div>
+      </article>`).join("");
+    document.querySelectorAll("[data-fire]").forEach(b => b.onclick = async () => {
+      const a = A.find(x => x.id === b.dataset.fire), s = document.getElementById("s-" + a.id);
+      let payload; try { payload = JSON.parse(document.getElementById("p-" + a.id).value); } catch (err) { s.textContent = "Invalid JSON"; s.className = "form-msg err"; return; }
+      b.disabled = true;
+      const r = await ABC.send(a.webhook, { automation: a.id, test: true, ...payload });
+      b.disabled = false;
+      s.textContent = r.demo ? "Shown in Inspector (demo)" : r.ok ? `Sent ✓ (HTTP ${r.status})` : "Failed, see Inspector";
+      s.className = "form-msg " + (r.ok ? "ok" : "err");
+    });
+  }
+  draw();
+</script>
+</body>
+</html>

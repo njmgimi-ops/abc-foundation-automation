@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automation Blueprint | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<div class="page-head"><div class="container">
+  <p class="eyebrow">Portfolio · n8n + Vapi</p>
+  <h1>Automation blueprint for a foundation repair company</h1>
+  <p>23 automations covering the whole customer journey, from the first call to the yearly maintenance visit. Each card shows the business problem, the trigger, the n8n flow and the tools used.</p>
+</div></div>
+<section style="padding-top:28px"><div class="container">
+  <div class="grid-3" id="stats"></div>
+  <div class="filters" id="filters"></div>
+  <div class="grid-3" id="cards"></div>
+  <div class="card" style="margin-top:28px">
+    <h3>Architecture</h3>
+<pre style="background:#0f1720;color:#d6e2f0;border-radius:10px;padding:16px;overflow:auto;font-size:.82rem">
+ Website forms ─┐                         ┌─► Google Sheets (CRM: Leads, Appointments, Jobs)
+ Vapi calls ────┼─► n8n Webhooks ─► logic ┼─► Google Calendar · Drive · Docs · Gmail
+ Twilio/Stripe/ │   (Switch, IF, Code,    ├─► Twilio SMS · WhatsApp Cloud API
+ DocuSeal hooks ┘    Wait, Schedule)      ├─► Vapi API (outbound calls, campaigns)
+                                          └─► Stripe · DocuSeal · ATTOM · Google Maps
+</pre>
+  </div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/automations.js"></script><script src="assets/app.js"></script>
+<script>
+  const A = ABC_AUTOMATIONS, cats = [...new Set(A.map(a => a.cat))];
+  const e = ABC.escapeHtml;
+  document.getElementById("stats").innerHTML = [
+    [A.length, "automations"], [cats.length, "business areas"], [A.filter(a => a.vapi && a.vapi !== "—").length, "use voice AI"]
+  ].map(([n, l]) => `<div class="card stat"><b>${n}</b>${l}</div>`).join("");
+  let current = "All";
+  function draw() {
+    document.getElementById("filters").innerHTML = ["All", ...cats].map(c => `<button class="${c === current ? "on" : ""}" data-c="${e(c)}">${e(c)}</button>`).join("");
+    document.querySelectorAll("#filters button").forEach(b => b.onclick = () => { current = b.dataset.c; draw(); });
+    document.getElementById("cards").innerHTML = A.filter(a => current === "All" || a.cat === current).map(a => `
+      <article class="card auto-card">
+        <div><span class="id">${a.id}</span> · <span class="phase phase-${a.phase}">Phase ${a.phase}</span> <span class="pill">${e(a.level)}</span></div>
+        <h3>${e(a.title)}</h3>
+        <div class="k">Business problem</div><div>${e(a.problem)}</div>
+        <div class="k">Trigger</div><div>${e(a.trigger)}</div>
+        <div class="k">Flow</div><ol>${a.flow.map(s => `<li>${e(s)}</li>`).join("")}</ol>
+        <div class="k">Voice AI</div><div>${e(a.vapi)}</div>
+        <div class="k">Stack</div><div>${a.tools.map(t => `<span class="pill">${e(t)}</span>`).join("")}</div>
+      </article>`).join("");
+  }
+  draw();
+</script>
+</body>
+</html>

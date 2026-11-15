@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Proposal | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<!--
+  Automation C3/C4 + B5.
+  n8n texts the homeowner a link like:
+  proposal.html?id=P-3301&name=Daniel%20Kim&addr=412%20Elm%20St&items=Steel%20piers|12|595;Drainage%20correction|1|1310&deposit=25&sign=<DocuSeal URL>&pay=<Stripe Payment Link>
+  items = name|qty|unitPrice separated by ';'
+-->
+<div class="page-head"><div class="container">
+  <p class="eyebrow" id="pid">Proposal</p>
+  <h1 id="ptitle">Foundation repair proposal</h1>
+  <p id="paddr"></p>
+</div></div>
+
+<section><div class="container grid-2">
+  <div class="card">
+    <h3>Scope &amp; price</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
+      <tbody id="items"></tbody>
+      <tfoot><tr><th colspan="3">Total</th><th id="total"></th></tr>
+             <tr><td colspan="3">Deposit due to schedule (<span id="dpct"></span>%)</td><td id="deposit"></td></tr></tfoot>
+    </table></div>
+    <p class="note">Includes permit fee, 811 utility locate, cleanup and the lifetime transferable warranty on piers.</p>
+  </div>
+  <div>
+    <div class="card">
+      <h3>Ready to go?</h3>
+      <ol>
+        <li><strong>Sign</strong> the agreement (DocuSeal)</li>
+        <li><strong>Pay the deposit</strong> (Stripe secure checkout)</li>
+        <li>We pull permits and open the Texas811 ticket, then text you your job date</li>
+      </ol>
+      <div class="btn-row">
+        <a class="btn btn-primary" id="sign" target="_blank" rel="noopener">✍️ Review &amp; sign</a>
+        <a class="btn btn-dark" id="pay" target="_blank" rel="noopener">💳 Pay deposit</a>
+      </div>
+      <p class="note" id="links-note"></p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Not ready yet?</h3>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="fin">Ask about financing</button>
+        <button class="btn btn-outline" id="q">I have a question</button>
+      </div>
+      <textarea id="qtext" placeholder="Type your question…" hidden style="margin-top:10px"></textarea>
+      <div class="form-msg" id="msg" role="status"></div>
+    </div>
+  </div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  const fmt = n => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const id = ABC.qs("id", "P-DEMO"), name = ABC.qs("name", "Homeowner"), addr = ABC.qs("addr", "");
+  const items = ABC.qs("items", "Steel push piers|12|595;Drainage correction|1|1310;Permit & engineering|1|0")
+    .split(";").map(s => { const [n, q, u] = s.split("|"); return { name: n, qty: +q || 1, unit: +u || 0 }; });
+  const total = items.reduce((a, i) => a + i.qty * i.unit, 0);
+  const pct = +ABC.qs("deposit", "25"); const dep = Math.round(total * pct) / 100;
+
+  document.getElementById("pid").textContent = "Proposal " + id;
+  document.getElementById("ptitle").textContent = "Proposal for " + name;
+  document.getElementById("paddr").textContent = addr;
+  document.getElementById("items").innerHTML = items.map(i =>
+    `<tr><td>${ABC.escapeHtml(i.name)}</td><td>${i.qty}</td><td>${fmt(i.unit)}</td><td>${fmt(i.qty * i.unit)}</td></tr>`).join("");
+  document.getElementById("total").textContent = fmt(total);
+  document.getElementById("dpct").textContent = pct;
+  document.getElementById("deposit").textContent = fmt(dep);
+
+  const safe = u => /^https:\/\//.test(u) ? u : "";   // only allow https links from the SMS
+  const sign = safe(ABC.qs("sign")), pay = safe(ABC.qs("pay"));
+  const signBtn = document.getElementById("sign"), payBtn = document.getElementById("pay");
+  if (sign) signBtn.href = sign; else signBtn.removeAttribute("href");
+  if (pay) payBtn.href = pay; else payBtn.removeAttribute("href");
+  if (!sign || !pay) document.getElementById("links-note").textContent = "Demo: n8n adds the real DocuSeal and Stripe links to this page's URL (?sign=…&pay=…).";
+
+  const base = { proposalId: id, name, amount: total, deposit: dep };
+  const msg = document.getElementById("msg");
+  signBtn.addEventListener("click", () => ABC.send("proposal", { ...base, action: "sign_clicked" }));
+  payBtn.addEventListener("click", () => ABC.send("proposal", { ...base, action: "pay_clicked" }));
+  document.getElementById("fin").onclick = async () => {
+    const r = await ABC.send("financing", { ...base, preferredContact: "sms" });
+    msg.textContent = r.ok ? "✅ Your estimator will text you financing options within 1 business day." : "Error, please call us."; msg.className = "form-msg " + (r.ok ? "ok" : "err");
+  };
+  const qt = document.getElementById("qtext");
+  document.getElementById("q").onclick = async () => {
+    if (qt.hidden) { qt.hidden = false; qt.focus(); document.getElementById("q").textContent = "Send question"; return; }
+    if (!qt.value.trim()) return;
+    const r = await ABC.send("proposal", { ...base, action: "question", question: qt.value.trim() });
+    msg.textContent = r.ok ? "✅ Sent. We'll reply shortly." : "Error, please call us."; msg.className = "form-msg " + (r.ok ? "ok" : "err");
+    if (r.ok) qt.value = "";
+  };
+</script>
+</body>
+</html>

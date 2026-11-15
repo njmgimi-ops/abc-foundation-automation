@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book or Reschedule | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<div class="page-head"><div class="container">
+  <h1 id="title">Book your free inspection</h1>
+  <p id="sub">Pick a preferred time. We confirm by text right away, and our AI assistant can also do this by phone 24/7.</p>
+</div></div>
+
+<!-- Automation A3 (book) and B3 (reschedule) → n8n webhook "abc/appointment" -->
+<section><div class="container grid-2">
+  <form class="card form-card" id="appt-form">
+    <input type="hidden" name="action" id="action" value="book">
+    <input type="hidden" name="appointmentId" id="appointmentId">
+    <div class="row2">
+      <div><label>Full name</label><input name="name" required></div>
+      <div><label>Mobile phone</label><input name="phone" type="tel" required></div>
+    </div>
+    <label>Email</label><input name="email" type="email">
+    <label id="addr-label">Property address</label><input name="address" id="address" required placeholder="412 Elm St, Garland, TX 75040">
+    <div class="row2">
+      <div><label>Preferred date</label><input name="date" id="date" type="date" required></div>
+      <div><label>Preferred time</label>
+        <select name="time" required>
+          <option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option>
+          <option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option>
+        </select></div>
+    </div>
+    <div id="reason-wrap" hidden><label>Reason for rescheduling (optional)</label><input name="reason"></div>
+    <label class="consent"><input type="checkbox" name="consent_sms"><span>Text me confirmations and reminders. Reply STOP to opt out.</span></label>
+    <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px" id="submit">Request this time</button>
+    <div class="form-msg" role="status"></div>
+    <p class="note">n8n checks Google Calendar for conflicts and replies with the confirmed slot or the nearest free one.</p>
+  </form>
+  <div>
+    <div class="card">
+      <h3>What happens next</h3>
+      <ul class="timeline">
+        <li class="done">You request a time</li>
+        <li>We text a confirmation and a photo upload link</li>
+        <li>Reminder texts 24 hours and 2 hours before</li>
+        <li>"Inspector on the way" text with live ETA</li>
+        <li>Written proposal on your phone the same day</li>
+      </ul>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Prefer to talk?</h3><p>Call our AI line anytime. It can book, reschedule or connect you to a person.</p><a class="btn btn-dark" id="call">📞 Call</a></div>
+  </div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  const B = ABC_CONFIG.BUSINESS;
+  const call = document.getElementById("call"); call.href = "tel:" + B.phoneE164; call.textContent = "📞 " + B.phoneDisplay;
+  const appt = ABC.qs("appt");
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  document.getElementById("date").min = d.toISOString().slice(0, 10);
+  if (appt) { // reschedule mode: SMS link = book.html?appt=APT-2041
+    document.getElementById("action").value = "reschedule";
+    document.getElementById("appointmentId").value = appt;
+    document.getElementById("title").textContent = "Reschedule appointment " + appt;
+    document.getElementById("sub").textContent = "Choose a new time. Your old slot is released once we confirm.";
+    document.getElementById("reason-wrap").hidden = false;
+    document.getElementById("address").required = false;
+    document.getElementById("submit").textContent = "Request new time";
+  }
+  ABC.bindForm("appt-form", "appointment", {
+    success: "✅ Request received. Watch for a confirmation text.",
+    transform: x => {
+      const slotStart = `${x.date}T${x.time}:00`;          // local wall-clock time
+      const out = { ...x, timezone: B.timezone };
+      if (x.action === "reschedule") out.newSlotStart = slotStart; else out.slotStart = slotStart;
+      delete out.date; delete out.time;
+      return out;
+    }
+  });
+</script>
+</body>
+</html>

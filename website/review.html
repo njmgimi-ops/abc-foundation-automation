@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Did We Do? | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<!--
+  Automation E2. IMPORTANT (real-client rule):
+  Google's Maps content policy does not allow businesses to "selectively solicit positive reviews".
+  So EVERY customer sees the same Google review button, whatever rating they give.
+  Private feedback is a separate, optional form. It is NOT a gate.
+  Link from SMS: review.html?job=J-5502&name=Daniel
+-->
+<div class="page-head"><div class="container"><h1 id="h">Thank you for choosing ABC!</h1><p>Your honest review helps other Dallas homeowners, and it helps us improve.</p></div></div>
+<section><div class="container grid-2">
+  <div class="card">
+    <h3>⭐ Leave a Google review</h3>
+    <p>It takes about a minute. Good or bad, we read every one.</p>
+    <a class="btn btn-primary" id="g" target="_blank" rel="noopener">Write a Google review</a>
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <h3>🎁 Know someone with foundation issues?</h3>
+    <form id="ref-form">
+      <div class="row2"><div><label>Their name</label><input name="name" required></div><div><label>Their phone</label><input name="phone" type="tel" required></div></div>
+      <label class="consent"><input type="checkbox" name="hasPermission" required><span>They told me it's OK for ABC to contact them.</span></label>
+      <button class="btn btn-dark" type="submit" style="margin-top:10px">Send referral</button>
+      <div class="form-msg" role="status"></div>
+    </form>
+  </div>
+  <form class="card form-card" id="fb-form">
+    <h3>💬 Private feedback to the owner (optional)</h3>
+    <p class="muted">Anything we should know? This goes straight to the owner. It's separate from your public review.</p>
+    <label>Overall rating</label>
+    <div class="stars" id="stars"></div>
+    <input type="hidden" name="rating" id="rating">
+    <label>Comments</label><textarea name="feedback"></textarea>
+    <label class="consent"><input type="checkbox" name="wantsCallback"><span>Please call me about this</span></label>
+    <button class="btn btn-outline" type="submit" style="margin-top:10px">Send to owner</button>
+    <div class="form-msg" role="status"></div>
+  </form>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  const B = ABC_CONFIG.BUSINESS, job = ABC.qs("job", "J-DEMO"), nm = ABC.qs("name");
+  if (nm) document.getElementById("h").textContent = `Thank you, ${nm}!`;
+  const g = document.getElementById("g"); g.href = B.googleReviewUrl;
+  g.addEventListener("click", () => ABC.send("review", { jobId: job, action: "google_review_clicked" }));
+  const stars = document.getElementById("stars"), rating = document.getElementById("rating");
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = "★"; b.setAttribute("aria-label", i + " stars");
+    b.onclick = () => { rating.value = i; [...stars.children].forEach((s, j) => s.classList.toggle("on", j < i)); };
+    stars.appendChild(b);
+  }
+  ABC.bindForm("fb-form", "review", { success: "✅ Thanks. The owner will read this today.", transform: d => ({ ...d, jobId: job, action: "private_feedback", rating: d.rating ? +d.rating : null }),
+    onSuccess: () => { document.getElementById("fb-form").reset(); [...stars.children].forEach(s => s.classList.remove("on")); } });
+  ABC.bindForm("ref-form", "referral", { success: "✅ Thank you! We'll reach out to them politely.", transform: d => ({ ...d, referredByJob: job }) });
+</script>
+</body>
+</html>

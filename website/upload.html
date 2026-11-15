@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Send Crack Photos | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<div class="page-head"><div class="container">
+  <h1>Send us photos before your inspection</h1>
+  <p>Photos help your inspector bring the right equipment and give you a more accurate estimate on the first visit.</p>
+</div></div>
+
+<!-- Automation C1 → n8n webhook "abc/inspection-media" (multipart/form-data: field "data" = JSON, files file0..fileN) -->
+<section><div class="container grid-2">
+  <form class="card form-card" id="media-form">
+    <div class="row2">
+      <div><label>Appointment ID</label><input name="appointmentId" id="appointmentId" placeholder="APT-2041"></div>
+      <div><label>Mobile phone</label><input name="phone" type="tel" required></div>
+    </div>
+    <label>Where are the cracks?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px 16px">
+      <label class="consent" style="margin:0"><input type="checkbox" name="locations" value="exterior brick"> Exterior brick</label>
+      <label class="consent" style="margin:0"><input type="checkbox" name="locations" value="interior drywall"> Interior drywall</label>
+      <label class="consent" style="margin:0"><input type="checkbox" name="locations" value="slab / floor"> Slab / floor</label>
+      <label class="consent" style="margin:0"><input type="checkbox" name="locations" value="garage"> Garage</label>
+      <label class="consent" style="margin:0"><input type="checkbox" name="locations" value="doors / windows"> Doors / windows</label>
+    </div>
+    <label>Photos or short videos (max 10 files)</label>
+    <input type="file" name="files" id="files" accept="image/*,video/*" multiple required>
+    <div id="preview" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px"></div>
+    <label>Notes</label><textarea name="notes" placeholder="e.g. crack is wider at the top, appeared after the summer"></textarea>
+    <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px">Upload</button>
+    <div class="form-msg" role="status"></div>
+  </form>
+  <div class="card">
+    <h3>📸 Photo tips</h3>
+    <ul>
+      <li>Put a coin or tape measure next to the crack for scale</li>
+      <li>One wide shot (whole wall) plus one close-up</li>
+      <li>Doors: a photo of the gap at the top corner when closed</li>
+      <li>Videos: walk slowly and say which room you're in</li>
+    </ul>
+    <p class="note">Files go to a private folder for your job and are only used for your inspection.</p>
+  </div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  document.getElementById("appointmentId").value = ABC.qs("appt");
+  const files = document.getElementById("files"), prev = document.getElementById("preview");
+  files.addEventListener("change", () => {
+    if (files.files.length > 10) { alert("Please choose up to 10 files."); files.value = ""; }
+    prev.innerHTML = "";
+    [...files.files].forEach(f => {
+      const el = f.type.startsWith("image/") ? Object.assign(document.createElement("img"), { src: URL.createObjectURL(f) })
+                                              : Object.assign(document.createElement("div"), { textContent: "🎬 " + f.name });
+      el.style.cssText = "aspect-ratio:1;object-fit:cover;border-radius:8px;background:#eef2f7;font-size:.7rem;padding:2px;overflow:hidden";
+      prev.appendChild(el);
+    });
+  });
+  ABC.bindForm("media-form", "inspectionMedia", {
+    success: "✅ Uploaded. Your inspector will review these before arriving.",
+    transform: d => ({ ...d, locations: [].concat(d.locations || []) }),
+    onSuccess: (_, __) => { document.getElementById("media-form").reset(); prev.innerHTML = ""; }
+  });
+</script>
+</body>
+</html>

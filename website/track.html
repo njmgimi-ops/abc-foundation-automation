@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Inspector Is On The Way | ABC Foundation Repair</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+<!-- Automation D2. n8n SMS link: track.html?name=Mike&eta=25&status=on_the_way&appt=APT-2041
+     status = scheduled | on_the_way | arrived | done -->
+<div class="page-head"><div class="container"><h1 id="h">Your inspector is on the way</h1><p id="p"></p></div></div>
+<section><div class="container grid-2">
+  <div class="card">
+    <h3 id="eta-h"></h3>
+    <div class="track-bar"><span id="bar" style="width:5%"></span></div>
+    <ul class="timeline" id="tl">
+      <li data-s="scheduled">Inspection scheduled</li>
+      <li data-s="on_the_way">Inspector on the way</li>
+      <li data-s="arrived">Inspector arrived</li>
+      <li data-s="done">Inspection done, proposal sent</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Before they arrive</h3>
+    <ul><li>Unlock gates and secure pets</li><li>Clear access to the crawl space or garage</li><li>Haven't sent photos yet? <a id="up" href="upload.html">Upload them now</a></li></ul>
+    <a class="btn btn-dark" id="call">📞 Call the office</a>
+  </div>
+</div></section>
+<footer id="site-footer"></footer>
+<script src="assets/config.js"></script><script src="assets/app.js"></script>
+<script>
+  const B = ABC_CONFIG.BUSINESS; const c = document.getElementById("call"); c.href = "tel:" + B.phoneE164;
+  const name = ABC.qs("name", "Your inspector"), eta = parseInt(ABC.qs("eta", "25"), 10) || 0;
+  const order = ["scheduled", "on_the_way", "arrived", "done"];
+  const status = order.includes(ABC.qs("status")) ? ABC.qs("status") : "on_the_way";
+  const idx = order.indexOf(status);
+  document.querySelectorAll("#tl li").forEach((li, i) => i <= idx && li.classList.add("done"));
+  const appt = ABC.qs("appt"); if (appt) document.getElementById("up").href = "upload.html?appt=" + encodeURIComponent(appt);
+  const head = { scheduled: "Your inspection is scheduled", on_the_way: `${name} is on the way`, arrived: `${name} has arrived`, done: "Inspection complete" };
+  document.getElementById("h").textContent = head[status];
+  document.getElementById("p").textContent = status === "on_the_way" ? `Estimated arrival in about ${eta} minutes.` : "";
+  document.getElementById("eta-h").textContent = status === "on_the_way" ? `ETA ≈ ${eta} min` : head[status];
+  setTimeout(() => document.getElementById("bar").style.width = [10, 55, 85, 100][idx] + "%", 200);
+</script>
+</body>
+</html>
