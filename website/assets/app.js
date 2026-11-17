@@ -65,7 +65,7 @@
     const b = document.getElementById("mode-badge");
     if (!b) return;
     if (!CFG.N8N_BASE_URL) { b.textContent = "DEMO"; b.className = "badge demo"; }
-    else { b.textContent = CFG.USE_TEST_URL ? "TEST" : "LIVE"; b.className = "badge " + (CFG.USE_TEST_URL ? "test" : "live"); }
+    else { const t = useTestUrl(); b.textContent = t ? "TEST" : "LIVE"; b.className = "badge " + (t ? "test" : "live"); }
   }
 
   function log(entry) {
@@ -86,12 +86,24 @@
     return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  /* Test mode switch: add ?n8n=test to any page URL to send to /webhook-test/
+     (n8n "Listen for test event"), ?n8n=live to go back. Remembered per browser tab. */
+  function useTestUrl() {
+    const p = new URLSearchParams(location.search).get("n8n");
+    try {
+      if (p === "test") sessionStorage.setItem("abc_n8n_mode", "test");
+      if (p === "live") sessionStorage.removeItem("abc_n8n_mode");
+      if (sessionStorage.getItem("abc_n8n_mode") === "test") return true;
+    } catch (_) { if (p === "test") return true; }
+    return CFG.USE_TEST_URL;
+  }
+
   function webhookUrl(key) {
     const path = CFG.WEBHOOKS[key];
     if (!path) throw new Error("Unknown webhook key: " + key);
     if (!CFG.N8N_BASE_URL) return "(demo) /webhook/" + path;
     const base = CFG.N8N_BASE_URL.replace(/\/+$/, "");
-    return `${base}/${CFG.USE_TEST_URL ? "webhook-test" : "webhook"}/${path}`;
+    return `${base}/${useTestUrl() ? "webhook-test" : "webhook"}/${path}`;
   }
 
   function meta() {
