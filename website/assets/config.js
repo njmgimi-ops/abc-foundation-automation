@@ -14,8 +14,8 @@
  * and the "Automation Inspector" panel shows the exact JSON that WOULD be sent.
  */
 window.ABC_CONFIG = {
-  N8N_BASE_URL: "",          // e.g. "https://abc-practice.app.n8n.cloud"
-  USE_TEST_URL: true,
+  N8N_BASE_URL: "https://hamasoj.app.n8n.cloud",
+  USE_TEST_URL: false,      // workflows are published, so use /webhook/ (production)
 
   // Optional shared secret. Add a header check (Header Auth) on your n8n Webhook nodes.
   WEBHOOK_SECRET_HEADER: "X-ABC-Secret",
