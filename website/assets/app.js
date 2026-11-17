@@ -132,8 +132,15 @@
       body.append("data", JSON.stringify(payload));
       [...files].forEach((f, i) => body.append("file" + i, f, f.name));
     } else {
-      headers["Content-Type"] = "application/json";
-      body = JSON.stringify(payload);
+      // Sent as application/x-www-form-urlencoded: a CORS "simple request", so the
+      // browser posts straight to n8n without a preflight (OPTIONS) check.
+      // n8n parses it into $json.body; nested objects arrive as JSON strings.
+      body = new URLSearchParams();
+      Object.entries(payload).forEach(([k, v]) => {
+        if (v === undefined || v === null) return;
+        if (Array.isArray(v)) v.forEach(x => body.append(k, typeof x === "object" ? JSON.stringify(x) : String(x)));
+        else body.append(k, typeof v === "object" ? JSON.stringify(v) : String(v));
+      });
     }
 
     try {
