@@ -9,13 +9,16 @@
 <header id="site-header"></header>
 <div class="page-head"><div class="container">
   <p class="eyebrow">Portfolio · n8n + Vapi</p>
-  <h1>Automation blueprint for a foundation repair company</h1>
+  <h1>AI Front Office: automation blueprint for a foundation repair company</h1>
   <p>23 automations covering the whole customer journey, from the first call to the yearly maintenance visit. Each card shows the business problem, the trigger, the n8n flow and the tools used.</p>
 </div></div>
 <section style="padding-top:28px"><div class="container">
   <div class="grid-3" id="stats"></div>
   <div class="filters" id="filters"></div>
   <div class="grid-3" id="cards"></div>
+  <h2 style="margin-top:40px">AI Front Office: packages</h2>
+  <p>One system from the first call to the Google review. Pick the starting point that fits your company; every package can be upgraded later.</p>
+  <div class="grid-3" id="packages"></div>
   <div class="card" style="margin-top:28px">
     <h3>Architecture</h3>
 <pre style="background:#0f1720;color:#d6e2f0;border-radius:10px;padding:16px;overflow:auto;font-size:.82rem">
@@ -35,6 +38,22 @@
   document.getElementById("stats").innerHTML = [
     [A.length, "automations"], [cats.length, "business areas"], [A.filter(a => a.vapi && a.vapi !== "—").length, "use voice AI"]
   ].map(([n, l]) => `<div class="card stat"><b>${n}</b>${l}</div>`).join("");
+  const PACKAGES = [
+    { name: "Starter", tag: "Never miss a call", ids: ["A1", "A2", "A3", "B3"],
+      points: ["AI receptionist answers 24/7", "Qualifies the caller and books the free inspection", "Appointments and calls saved in your CRM", "Reminders and easy rescheduling"] },
+    { name: "Growth", tag: "Follow up and close", ids: ["A1", "A2", "A3", "B1", "B2", "B3", "B4", "C1", "C3"],
+      points: ["Everything in Starter", "Missed-call text-back and lead nurture", "Crack photo collection before the visit", "Proposal and quote follow-up"] },
+    { name: "Full Suite", tag: "Lead to review", ids: A.map(a => a.id),
+      points: ["All " + A.length + " automations", "Dispatch, permits, invoicing and warranty", "Google review and yearly maintenance reminders", "One CRM from the first call to the last job"] }
+  ];
+  document.getElementById("packages").innerHTML = PACKAGES.map(p => `
+    <article class="card">
+      <h3>${e(p.name)}</h3>
+      <div class="k">${e(p.tag)}</div>
+      <ul>${p.points.map(s => `<li>${e(s)}</li>`).join("")}</ul>
+      <div class="k">${p.ids.length} automations</div>
+      <div>${p.ids.map(i => `<span class="pill">${e(i)}</span>`).join("")}</div>
+    </article>`).join("");
   let current = "All";
   function draw() {
     document.getElementById("filters").innerHTML = ["All", ...cats].map(c => `<button class="${c === current ? "on" : ""}" data-c="${e(c)}">${e(c)}</button>`).join("");
